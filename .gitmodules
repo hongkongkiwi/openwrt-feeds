@@ -28,3 +28,6 @@
 [submodule "redsocks2"]
 	path = redsocks2
 	url = https://github.com/aa65535/openwrt-redsocks2.git
+[submodule "ubus-json-server"]
+	path = ubus-json-server
+	url = https://github.com/mkschreder/ubus-json-server.git
