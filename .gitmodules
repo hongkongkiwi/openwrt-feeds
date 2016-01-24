@@ -1,0 +1,12 @@
+[submodule "c-icap-modules"]
+	path = c-icap-modules
+	url = git@github.com:hongkongkiwi/openwrt-c-icap-modules.git
+[submodule "c-icap"]
+	path = c-icap
+	url = git@github.com:hongkongkiwi/openwrt-c-icap.git
+[submodule "squid"]
+	path = squid
+	url = git@github.com:hongkongkiwi/openwrt-squid.git
+[submodule "squidguard"]
+	path = squidguard
+	url = git@github.com:hongkongkiwi/openwrt-squidguard.git
