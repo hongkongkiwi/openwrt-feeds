@@ -10,3 +10,21 @@
 [submodule "squidguard"]
 	path = squidguard
 	url = git@github.com:hongkongkiwi/openwrt-squidguard.git
+[submodule "shadowsocks"]
+	path = shadowsocks
+	url = https://github.com/shadowsocks/openwrt-shadowsocks.git
+[submodule "shadowvpn"]
+	path = shadowvpn
+	url = https://github.com/aa65535/openwrt-shadowvpn.git
+[submodule "luci-shadow"]
+	path = luci-shadow
+	url = https://github.com/aa65535/openwrt-dist-luci.git
+[submodule "chinadns"]
+	path = chinadns
+	url = https://github.com/aa65535/openwrt-chinadns.git
+[submodule "autossh"]
+	path = autossh
+	url = https://github.com/aa65535/openwrt-autossh.git
+[submodule "redsocks2"]
+	path = redsocks2
+	url = https://github.com/aa65535/openwrt-redsocks2.git
