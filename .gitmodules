@@ -31,3 +31,6 @@
 [submodule "ubus-json-server"]
 	path = ubus-json-server
 	url = https://github.com/mkschreder/ubus-json-server.git
+[submodule "ufdbguard"]
+	path = ufdbguard
+	url = git@github.com:hongkongkiwi/openwrt-ufdbguard.git
