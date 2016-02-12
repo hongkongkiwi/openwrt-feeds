@@ -1,36 +1,42 @@
 [submodule "c-icap-modules"]
-	path = c-icap-modules
+	path = network/services/c-icap-modules
 	url = git@github.com:hongkongkiwi/openwrt-c-icap-modules.git
 [submodule "c-icap"]
-	path = c-icap
+	path = network/services/c-icap
 	url = git@github.com:hongkongkiwi/openwrt-c-icap.git
 [submodule "squid"]
-	path = squid
+	path = network/services/squid
 	url = git@github.com:hongkongkiwi/openwrt-squid.git
 [submodule "squidguard"]
-	path = squidguard
+	path = network/services/squidguard
 	url = git@github.com:hongkongkiwi/openwrt-squidguard.git
 [submodule "shadowsocks"]
-	path = shadowsocks
+	path = network/services/shadowsocks
 	url = https://github.com/shadowsocks/openwrt-shadowsocks.git
 [submodule "shadowvpn"]
-	path = shadowvpn
+	path = network/services/shadowvpn
 	url = https://github.com/aa65535/openwrt-shadowvpn.git
 [submodule "luci-shadow"]
-	path = luci-shadow
+	path = luci/luci-shadowsocks
 	url = https://github.com/aa65535/openwrt-dist-luci.git
 [submodule "chinadns"]
-	path = chinadns
+	path = network/services/chinadns
 	url = https://github.com/aa65535/openwrt-chinadns.git
 [submodule "autossh"]
-	path = autossh
+	path = network/services/autossh
 	url = https://github.com/aa65535/openwrt-autossh.git
 [submodule "redsocks2"]
-	path = redsocks2
+	path = network/services/redsocks2
 	url = https://github.com/aa65535/openwrt-redsocks2.git
 [submodule "ubus-json-server"]
-	path = ubus-json-server
+	path = network/ubus-json-server
 	url = https://github.com/mkschreder/ubus-json-server.git
 [submodule "ufdbguard"]
-	path = ufdbguard
+	path = network/services/ufdbguard
 	url = git@github.com:hongkongkiwi/openwrt-ufdbguard.git
+[submodule "utilities/nodejs"]
+	path = utilities/nodejs
+	url = git@github.com:hongkongkiwi/openwrt-nodejs.git
+[submodule "utilities/jxcore"]
+	path = utilities/jxcore
+	url = git@github.com:hongkongkiwi/openwrt-jxcore.git
