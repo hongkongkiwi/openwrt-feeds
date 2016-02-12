@@ -40,3 +40,15 @@
 [submodule "utilities/jxcore"]
 	path = utilities/jxcore
 	url = git@github.com:hongkongkiwi/openwrt-jxcore.git
+[submodule "luci/luci-theme-material"]
+	path = luci/luci-theme-material
+	url = git@github.com:LuttyYang/luci-theme-material.git
+[submodule "luci/luci-access-control"]
+	path = luci/luci-access-control
+	url = git@github.com:k-szuster/luci-access-control.git
+[submodule "luci/luci-app-pptp-server"]
+	path = luci/luci-app-pptp-server
+	url = git@github.com:blapid/luci-app-pptp-server.git
+[submodule "utilities/turris-updater"]
+	path = utilities/turris-updater
+	url = https://gitlab.labs.nic.cz/turris/updater.git
