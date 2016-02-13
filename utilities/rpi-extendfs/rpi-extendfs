@@ -1,0 +1,215 @@
+#!/bin/ash
+
+ceil_val=
+floor_val=
+ROOTPART=$(basename $(readlink /dev/root))
+SECTSIZE=$(cat /sys/block/mmcblk0/queue/hw_sector_size)
+STARTSECT=$(cat /sys/block/mmcblk0/${ROOTPART}/start)
+LASTSECT=$(cat /sys/block/mmcblk0/${ROOTPART}/size)
+MAXSIZE=$(cat /sys/block/mmcblk0/size)
+tmp_size=$(( 1024/${SECTSIZE} ))
+PARTSIZE=$(( ( ${LASTSECT}/ ${tmp_size} )/1024 ))
+MAXMB=$(( ( ( ${MAXSIZE} - ${STARTSECT} - 1 ) / $tmp_size ) / 1024 ))
+MINSECT=$(( ${LASTSECT} - 1 + ${STARTSECT} ))
+DIALOG="/usr/bin/dialog"
+NEWSIZE=0
+USESECTORS=0
+RES="x"
+ERROR=0
+REDO=0
+TARGETSECTOR=0
+TARGETSIZE=0
+RETVAL=0
+RETVAL2=0
+
+floor() {
+    float_in=$1
+    floor_val=${float_in/.*}
+}
+
+ceiling() {
+    float_in=$1
+    ceil_val=${float_in/.*}
+    ceil_val=$((${ceil_val}+1))
+}
+
+[ $(/usr/bin/id -u) != "0" ] && {
+	$DIALOG --clear --title "Error" --msgbox "Sorry. Only root is allowed\nto extend root partition." 0 0
+	clear
+	exit 1
+}
+
+for DEVNAME in /dev/mmcblk0p**; do
+	[ "$DEVNAME" != "/dev/mmcblk0p1" ] && [ $DEVNAME != "/dev/mmcblk0p2" ] && {
+		$DIALOG --clear --title "Error" --msgbox "Partitioning scheme is not standard.\nNon-standard partition schemes are not supported\nby this tool." 0 0
+		clear
+		exit 1
+	}
+done
+
+ceiling $PARTSIZE
+PARTSIZE=$ceil_val
+floor $MAXMB
+MAXMB=$floor_val
+
+get_result() {
+	RES=$(cat "/tmp/dlg-result.tmp")
+	rm -f "/tmp/dlg-result.tmp" > /dev/null
+}
+
+resizefs_doit() {
+	TARGETSIZE=$(( ( (${TARGETSECTOR} - ${STARTSECT}) / $tmp_size ) / 1024))
+	MSG="LAST WARNING!!!\n\n
+You are doing this on your own risk.\n\n
+Are you sure you want to extend root\n
+partition to sector ${TARGETSECTOR}?\n
+This would set root partition's size\n
+to approximately ${TARGETSIZE}MB"
+	$DIALOG --clear --title "Alert" --yesno "$MSG" 0 0
+
+	[ $? -eq 0 ] || return
+
+	clear
+	/usr/sbin/fdisk /dev/mmcblk0 <<EOF
+p
+d
+2
+n
+p
+2
+$STARTSECT
+$TARGETSECTOR
+p
+w
+EOF
+
+	cat <<\EOF > /etc/init.d/resize2fs_once &&
+#!/bin/sh /etc/rc.common
+
+START=18
+
+start() {
+	/usr/sbin/resize2fs /dev/root
+	/etc/init.d/resize2fs_once disable
+	rm /etc/init.d/resize2fs_once
+}
+
+stop() {
+	echo
+}
+EOF
+	chmod a+x /etc/init.d/resize2fs_once
+	/etc/init.d/resize2fs_once enable
+	$DIALOG --clear --title "Resize root partition" --msgbox "Resizing will be completed\nafter reboot.\n\nRebooting now!" 0 0
+	reboot
+	exit
+}
+
+resizefs_asksize() {
+	[ $USESECTORS -eq 0 ] && {
+		TITLE="Enter new size in MB"
+		MSG="Value is not exact and it must be\natleast $(( ${PARTSIZE} + 1 )) and\nmaximum is ${MAXMB}"
+		DEFVALUE=${MAXMB}
+	}
+
+	[ $USESECTORS -eq 0 ] || {
+		TITLE="Enter new last sector"
+		MSG="Value must be between $(( ${MINSECT} + 1 )) and $(( ${MAXSIZE} - 1 ))"
+		DEFVALUE=$(( ${MAXSIZE} - 1 ))
+	}
+
+	$DIALOG --clear --title "$TITLE" --inputbox "$MSG" 0 0 "$DEFVALUE" 2> /tmp/dlg-result.tmp
+	RETVAL2=$?
+
+	[ $RETVAL2 -eq 1 ] && return
+	[ $RETVAL2 -eq 255 ] && return
+
+	get_result
+	[ ! -z "${RES##*[!0-9]*}" ] || {
+		$DIALOG --clear --title "Error" --msgbox "${RES} is not a number" 0 0
+		REDO=1
+		return
+	}
+	ERROR=0
+
+	[ $USESECTORS -eq 0 ] && {
+		[ $RES -le $PARTSIZE ] && ERROR=1
+		[ $RES -ge $(( ${MAXMB} + 1 )) ] && ERROR=1
+		[ $ERROR -eq 0 ] && {
+			TARGETSECTOR=$((${STARTSECT} + $((${RES} * $tmp_size * 1024))))
+			[ $TARGETSECTOR -ge $(( ${MAXSIZE} - 1 )) ] && TARGETSECTOR=$(( ${MAXSIZE} - 1 ))
+		}
+	}
+
+	[ $USESECTORS -eq 0 ] || {
+		[ $RES -le $MINSECT ] && ERROR=1
+		[ $RES -ge $MAXSIZE ] && ERROR=1
+		[ $ERROR -eq 0 ] && TARGETSECTOR=$RES
+	}
+
+	[ $ERROR -eq 0 ] && resizefs_doit
+
+	[ $ERROR -eq 1 ] && {
+		$DIALOG --clear --title "Error" --msgbox "${RES} is not in valid range" 0 0
+		ERROR=0
+		REDO=1
+	}
+
+}
+
+resizefs() {
+
+	[ ! -h /dev/root ] && {
+		$DIALOG --clear --title "Error" --msgbox "\n/dev/root does not exist or is not a symlink. \n\nResize aborted." 9 60
+		return 0
+	}
+
+	while [ 1 -eq 1 ]; do
+
+		MSG=" You can grow your root partition, but you cannot\n shrunk it. This feature is only supported if you\n haven't altered partitioning by adding partition(s).\n\n WARNING: Use at your own risk."
+
+		$DIALOG --clear --title "Resize root partition" \
+			--menu "$MSG" 0 0 5 \
+			"Maximum" "Use remaining space to fill root partition" \
+			"Set size" "Set size of root partition in megabytes" \
+			"Set sector" "Set last sector of partition" \
+			"About" "About this tool" \
+			"Exit" "" 2> /tmp/dlg-result.tmp
+
+		RETVAL=$?
+
+		[ $RETVAL -eq 1 ] && return
+		[ $RETVAL -eq 255 ] && return
+		[ $RETVAL -eq 0 ] && {
+			get_result
+			[ "$RES" == "Maximum" ] && {
+				TARGETSECTOR=$(( ${MAXSIZE} - 1 ))
+				resizefs_doit
+			}
+			[ "$RES" == "Set size" ] && {
+				clear
+				USESECTORS=0
+				REDO=1
+				while [ $REDO -eq 1 ]; do
+					REDO=0
+					resizefs_asksize
+				done
+			}
+			[ "$RES" == "Set sector" ] && {
+				USESECTORS=1
+				REDO=1
+				while [ $REDO -eq 1 ]; do
+					REDO=0
+					resizefs_asksize
+				done
+			}
+			[ $RES == "About" ] && $DIALOG --clear --title "About rpi-resize" --msgbox "rpi-resize v0.2\nAuthor: Oskari Rauta\n\nThis tool is easy to use utility used\nfor resizing root partition of OpenWrt\non Raspberry Pi. It is based on utility\nnamed raspi-config." 0 0
+			[ $RES == "Exit" ] && return
+		}
+	done
+
+}
+
+resizefs
+clear
+
