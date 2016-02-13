@@ -52,3 +52,6 @@
 [submodule "utilities/turris-updater"]
 	path = utilities/turris-updater
 	url = https://gitlab.labs.nic.cz/turris/updater.git
+[submodule "utilities/rpi-extendfs"]
+	path = utilities/rpi-extendfs
+	url = git@github.com:hongkongkiwi/rpi-extendfs.git
